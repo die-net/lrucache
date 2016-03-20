@@ -66,6 +66,8 @@ func TestSize(t *testing.T) {
 	c.Set("some", []byte("longer text"))
 	assert.Equal(t, c.size, entryOverhead+15)
 
+	assert.Equal(t, c.Size(), c.size)
+
 	c.Delete("some")
 	assert.Equal(t, c.size, 0)
 }
@@ -98,12 +100,22 @@ func BenchmarkGet(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			c.Get(randKey(20000))
+			_, _ = c.Get(randKey(20000))
 		}
 	})
 }
 
-func BenchmarkSetGetDelete(b *testing.B) {
+func BenchmarkSize(b *testing.B) {
+	c := benchSetup(b, 10000000, 10000)
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = c.Size()
+		}
+	})
+}
+
+func BenchmarkSetGetDeleteSize(b *testing.B) {
 	v := []byte("value")
 
 	c := benchSetup(b, 10000000, 10000)
@@ -113,6 +125,7 @@ func BenchmarkSetGetDelete(b *testing.B) {
 			c.Set(randKey(10000), v)
 			_, _ = c.Get(randKey(20000))
 			c.Delete(randKey(10000))
+			_ = c.Size()
 		}
 	})
 }

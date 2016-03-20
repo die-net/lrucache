@@ -32,31 +32,34 @@ func New(maxSize int64) *LruCache {
 
 // Get returns the []byte representation of a cached response and a bool
 // set to true if the key was found.
-func (c *LruCache) Get(key string) (value []byte, ok bool) {
+func (c *LruCache) Get(key string) ([]byte, bool) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	if le, ok := c.cache[key]; ok {
 		c.lru.MoveToBack(le)
-		return le.Value.(*entry).value, true
+		value := le.Value.(*entry).value
+
+		c.mu.Unlock() // Avoiding defer overhead
+		return value, true
 	}
+
+	c.mu.Unlock() // Avoiding defer overhead
 	return nil, false
 }
 
 // Set stores the []byte representation of a response for a given key.
 func (c *LruCache) Set(key string, value []byte) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	if le, ok := c.cache[key]; ok {
 		c.lru.MoveToBack(le)
 		e := le.Value.(*entry)
-		c.size = c.size + int64(len(value)) - int64(len(e.value))
+		c.size += int64(len(value)) - int64(len(e.value))
 		e.value = value
 	} else {
 		e := &entry{key: key, value: value}
 		c.cache[key] = c.lru.PushBack(e)
-		c.size = c.size + e.size()
+		c.size += e.size()
 	}
 
 	for c.size > c.MaxSize {
@@ -66,23 +69,35 @@ func (c *LruCache) Set(key string, value []byte) {
 		}
 		c.deleteElement(le)
 	}
+
+	c.mu.Unlock()
 }
 
 // Delete removes the value associated with a key.
 func (c *LruCache) Delete(key string) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	if le, ok := c.cache[key]; ok {
 		c.deleteElement(le)
 	}
+
+	c.mu.Unlock()
+}
+
+// Size returns the estimated current memory usage of LruCache.
+func (c *LruCache) Size() int64 {
+	c.mu.Lock()
+	size := c.size
+	c.mu.Unlock()
+
+	return size
 }
 
 func (c *LruCache) deleteElement(le *list.Element) {
 	c.lru.Remove(le)
 	e := le.Value.(*entry)
 	delete(c.cache, e.key)
-	c.size = c.size - e.size()
+	c.size -= e.size()
 }
 
 // Rough estimate of map + entry object + string + byte slice overheads in bytes.

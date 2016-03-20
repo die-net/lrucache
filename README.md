@@ -6,7 +6,7 @@ LruCache is a thread-safe, in-memory
 
 See the [godoc documentation](https://godoc.org/github.com/die-net/lrucache) for more detail.
 
-Also included are a test suite with close to 100% test coverage and a parallel benchmark suite that can be used to verify thread-safely. Benchmarks show individual Set, Get, and Delete operations take under 500ns to complete.
+Also included are a test suite with close to 100% test coverage and a parallel benchmark suite that can be used to verify thread-safely. Benchmarks show individual Set, Get, and Delete operations take under 400ns to complete.
 
 License
 -------
