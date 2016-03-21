@@ -3,9 +3,11 @@ LruCache [![Build Status](https://travis-ci.org/die-net/lrucache.svg?branch=mast
 
 LruCache is a thread-safe, in-memory [httpcache.Cache](https://github.com/gregjones/httpcache) implementation that evicts the least recently used entries when a byte size limit would be exceeded.
 
-See the [godoc documentation](https://godoc.org/github.com/die-net/lrucache) for more detail.
+Using the included TwoTier wrapper, it could also be used as a small and fast cache for popular objects, falling back to a larger and slower cache (such as [s3cache](https://github.com/sourcegraph/s3cache)) for less popular ones.
 
-Also included are a test suite with close to 100% test coverage and a parallel benchmark suite that can be used to verify thread-safely. Benchmarks show individual Set, Get, and Delete operations take under 400ns to complete.
+Also see the godoc API documentation for [LruCache](https://godoc.org/github.com/die-net/lrucache) or [TwoTier](https://godoc.org/github.com/die-net/lrucache/twotier).
+
+Included are a test suite with close to 100% test coverage and a parallel benchmark suite that shows individual Set, Get, and Delete operations take under 400ns to complete.
 
 License
 -------
