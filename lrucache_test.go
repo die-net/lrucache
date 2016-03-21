@@ -104,22 +104,22 @@ func testRaceWorker(c *LruCache) {
 }
 
 func TestOverhead(t *testing.T) {
-        if testing.Short() || !testing.Verbose() {
-                t.SkipNow()
-        }
+	if testing.Short() || !testing.Verbose() {
+		t.SkipNow()
+	}
 
-        num := 1000000
-        c := New(int64(num) * 1000)
+	num := 1000000
+	c := New(int64(num) * 1000)
 
-        mem := readMem()
+	mem := readMem()
 
-        for n := 0; n < num; n++ {
-                c.Set(strconv.Itoa(n), []byte(randKey(1000000000)))
-        }
+	for n := 0; n < num; n++ {
+		c.Set(strconv.Itoa(n), []byte(randKey(1000000000)))
+	}
 
-        mem = readMem() - mem
-        stored := c.Size() - int64(num) * entryOverhead
-        t.Log("entryOverhead =", (int64(mem) - stored) / int64(num))
+	mem = readMem() - mem
+	stored := c.Size() - int64(num)*entryOverhead
+	t.Log("entryOverhead =", (int64(mem)-stored)/int64(num))
 }
 
 func BenchmarkSet(b *testing.B) {
@@ -187,8 +187,8 @@ func randKey(n int32) string {
 }
 
 func readMem() int64 {
-        m := runtime.MemStats{}
-        runtime.GC()
-        runtime.ReadMemStats(&m)
-        return int64(m.Alloc)
+	m := runtime.MemStats{}
+	runtime.GC()
+	runtime.ReadMemStats(&m)
+	return int64(m.Alloc)
 }
