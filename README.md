@@ -2,7 +2,7 @@ LruCache
 ========
 
 LruCache is a thread-safe, in-memory
-[httpcache.Cache](https://github.com/gregjones httpcache) implementation that evicts the least recently used entries when a byte size limit would be exceeded.
+[httpcache.Cache](https://github.com/gregjones/httpcache) implementation that evicts the least recently used entries when a byte size limit would be exceeded.
 
 See the [godoc documentation](https://godoc.org/github.com/die-net/lrucache) for more detail.
 
