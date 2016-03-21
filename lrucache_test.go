@@ -42,7 +42,7 @@ func TestCache(t *testing.T) {
 	for _, e := range entries {
 		value, ok := c.Get(e.key)
 		if assert.Equal(t, ok, true) {
-			assert.Equal(t, string(value), e.value)
+			assert.Equal(t, string(value), string(e.value))
 		}
 	}
 
@@ -56,20 +56,20 @@ func TestCache(t *testing.T) {
 
 func TestSize(t *testing.T) {
 	c := New(1000000)
-	assert.Equal(t, c.size, 0)
+	assert.Equal(t, c.size, int64(0))
 
 	// Check that size is overhead + len(key) + len(value)
 	c.Set("some", []byte("text"))
-	assert.Equal(t, c.size, entryOverhead+8)
+	assert.Equal(t, c.size, int64(entryOverhead+8))
 
 	// Replace key
 	c.Set("some", []byte("longer text"))
-	assert.Equal(t, c.size, entryOverhead+15)
+	assert.Equal(t, c.size, int64(entryOverhead+15))
 
 	assert.Equal(t, c.Size(), c.size)
 
 	c.Delete("some")
-	assert.Equal(t, c.size, 0)
+	assert.Equal(t, c.size, int64(0))
 }
 
 func TestEvict(t *testing.T) {
@@ -80,7 +80,26 @@ func TestEvict(t *testing.T) {
 	}
 
 	// Make sure only the last two entries were kept.
-	assert.Equal(t, c.size, entryOverhead*2+10)
+	assert.Equal(t, c.size, int64(entryOverhead*2+10))
+}
+
+func TestRace(t *testing.T) {
+	c := New(100000)
+
+	for worker := 0; worker < 8; worker++ {
+		go testRaceWorker(c)
+	}
+}
+
+func testRaceWorker(c *LruCache) {
+	v := []byte("value")
+
+	for n := 0; n < 1000; n++ {
+		c.Set(randKey(100), v)
+		_, _ = c.Get(randKey(200))
+		c.Delete(randKey(100))
+		_ = c.Size()
+	}
 }
 
 func BenchmarkSet(b *testing.B) {
