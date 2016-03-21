@@ -101,7 +101,7 @@ func (c *LruCache) deleteElement(le *list.Element) {
 }
 
 // Rough estimate of map + entry object + string + byte slice overheads in bytes.
-const entryOverhead = 128
+const entryOverhead = 168
 
 type entry struct {
 	key   string
