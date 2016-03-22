@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strconv"
 	"testing"
+	"time"
 )
 
 var entries = []struct {
@@ -22,15 +23,15 @@ var entries = []struct {
 
 func TestInterface(t *testing.T) {
 	var h httpcache.Cache
-	h = New(1000000)
+	h = New(1000000, 0)
 	if assert.NotNil(t, h) {
 		_, ok := h.Get("missing")
-		assert.Equal(t, ok, false)
+		assert.False(t, ok)
 	}
 }
 
 func TestCache(t *testing.T) {
-	c := New(1000000)
+	c := New(1000000, 0)
 
 	for _, e := range entries {
 		c.Set(e.key, []byte(e.value))
@@ -38,12 +39,12 @@ func TestCache(t *testing.T) {
 
 	c.Delete("missing")
 	_, ok := c.Get("missing")
-	assert.Equal(t, ok, false)
+	assert.False(t, ok)
 
 	for _, e := range entries {
 		value, ok := c.Get(e.key)
-		if assert.Equal(t, ok, true) {
-			assert.Equal(t, string(value), string(e.value))
+		if assert.True(t, ok) {
+			assert.Equal(t, string(e.value), string(value))
 		}
 	}
 
@@ -51,41 +52,81 @@ func TestCache(t *testing.T) {
 		c.Delete(e.key)
 
 		_, ok := c.Get(e.key)
-		assert.Equal(t, ok, false)
+		assert.False(t, ok)
 	}
 }
 
 func TestSize(t *testing.T) {
-	c := New(1000000)
-	assert.Equal(t, c.size, int64(0))
+	c := New(1000000, 0)
+	assert.Equal(t, int64(0), c.size)
 
 	// Check that size is overhead + len(key) + len(value)
 	c.Set("some", []byte("text"))
-	assert.Equal(t, c.size, int64(entryOverhead+8))
+	assert.Equal(t, int64(entryOverhead+8), c.size)
 
 	// Replace key
 	c.Set("some", []byte("longer text"))
-	assert.Equal(t, c.size, int64(entryOverhead+15))
+	assert.Equal(t, int64(entryOverhead+15), c.size)
 
-	assert.Equal(t, c.Size(), c.size)
+	assert.Equal(t, c.size, c.Size())
 
 	c.Delete("some")
-	assert.Equal(t, c.size, int64(0))
+	assert.Equal(t, int64(0), c.size)
 }
 
-func TestEvict(t *testing.T) {
-	c := New(entryOverhead*2 + 20)
+func TestMaxSize(t *testing.T) {
+	c := New(entryOverhead*2+20, 0)
 
 	for _, e := range entries {
 		c.Set(e.key, []byte(e.value))
 	}
 
 	// Make sure only the last two entries were kept.
-	assert.Equal(t, c.size, int64(entryOverhead*2+10))
+	assert.Equal(t, int64(entryOverhead*2+10), c.size)
+}
+
+func TestMaxAge(t *testing.T) {
+	c := New(1000000, 86400)
+
+	now := time.Now().Unix()
+	expected := now + 86400
+
+	// Add one expired entry
+	c.Set("foo", []byte("bar"))
+	c.lru.Back().Value.(*entry).expires = now
+
+	// Set a few and verify expiration times
+	for _, s := range entries {
+		c.Set(s.key, []byte(s.value))
+		e := c.lru.Back().Value.(*entry)
+		assert.True(t, e.expires >= expected && e.expires <= expected+10)
+	}
+
+	// Make sure we can get them all
+	for _, s := range entries {
+		_, ok := c.Get(s.key)
+		assert.True(t, ok)
+	}
+
+	// Make sure only non-expired entries are still in the cache
+	assert.Equal(t, int64(entryOverhead*5+24), c.size)
+
+	// Expire all entries
+	for _, s := range entries {
+		le, ok := c.cache[s.key]
+		if assert.True(t, ok) {
+			le.Value.(*entry).expires = now
+		}
+	}
+
+	// Get one expired entry, which should clear all expired entries
+	_, ok := c.Get("3")
+	assert.False(t, ok)
+	assert.Equal(t, int64(0), c.size)
 }
 
 func TestRace(t *testing.T) {
-	c := New(100000)
+	c := New(100000, 0)
 
 	for worker := 0; worker < 8; worker++ {
 		go testRaceWorker(c)
@@ -109,7 +150,7 @@ func TestOverhead(t *testing.T) {
 	}
 
 	num := 1000000
-	c := New(int64(num) * 1000)
+	c := New(int64(num)*1000, 0)
 
 	mem := readMem()
 
@@ -170,7 +211,7 @@ func BenchmarkSetGetDeleteSize(b *testing.B) {
 }
 
 func benchSetup(b *testing.B, size int64, entries int) *LruCache {
-	c := New(size)
+	c := New(size, 0)
 
 	v := []byte("value")
 	for i := 0; i < entries; i++ {
