@@ -18,13 +18,13 @@ func TestInterface(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	// Check New's validation.
-	c := lrucache.New(1000000)
+	c := lrucache.New(1000000, 0)
 	assert.Nil(t, New(nil, nil))
 	assert.Nil(t, New(nil, c))
 	assert.Nil(t, New(c, nil))
 	assert.Nil(t, New(c, c))
 
-	assert.NotNil(t, New(c, lrucache.New(1000000)))
+	assert.NotNil(t, New(c, lrucache.New(1000000, 0)))
 }
 
 func TestGet(t *testing.T) {
@@ -81,5 +81,5 @@ func TestDelete(t *testing.T) {
 }
 
 func twoNew(firstSize, secondSize int64) *TwoTier {
-	return New(lrucache.New(firstSize), lrucache.New(secondSize))
+	return New(lrucache.New(firstSize, 0), lrucache.New(secondSize, 0))
 }
