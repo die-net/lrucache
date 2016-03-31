@@ -4,18 +4,15 @@ go:
   - 1.4
   - 1.5
   - 1.6
-  - tip
-
-matrix:
-  allow_failures:
-    - go: tip
-  fast_finish: true
 
 install:
   - # Do nothing.
 
 script:
-  - go get -t -v ./...
-  - go test -v -short -cover -race ./...
+  - go get -t -v ./... github.com/mattn/goveralls
+  - go test -v -short -race -cover -covermode=count -coverprofile=profile.cov ./...
   - diff -u <(echo -n) <(gofmt -d -s .)
   - go vet ./...
+
+after_success:
+  - goveralls -coverprofile=profile.cov -service=travis-ci
