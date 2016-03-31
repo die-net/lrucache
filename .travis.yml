@@ -16,5 +16,5 @@ script:
 
 after_success:
   - for dir in . ./twotier; do go test -short -cover -covermode=count -coverprofile=$dir/profile.out $dir; done
-  - (echo mode:\ set; find ./ -name profile.out | xargs grep -vH mode:\ set ) > all.out
+  - (echo mode:\ count; find ./ -name profile.out | xargs grep -vh mode:\ count ) > all.out
   - goveralls -coverprofile=all.out -service=travis-ci
