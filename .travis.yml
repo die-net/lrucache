@@ -1,10 +1,15 @@
 language: go
 
-go:
-  - 1.4.3
-  - 1.5.4
-  - 1.6.3
-  - 1.7.3
+matrix:
+  include:
+  - go: 1.4.3
+    env: GOVET=false
+  - go: 1.5.4
+    env: GOVET=true
+  - go: 1.6.3
+    env: GOVET=true
+  - go: 1.7.3
+    env: GOVET=true
 
 install:
   - # Do nothing.
@@ -13,7 +18,7 @@ script:
   - go get -t -v ./... github.com/mattn/goveralls
   - go test -v -short -race ./...
   - diff -u <(echo -n) <(gofmt -d -s .)
-  - go vet ./...
+  - if [ "$GOVET" = "true" ]; then go vet ./...; fi
 
 after_success:
   - for dir in . ./twotier; do go test -short -cover -covermode=count -coverprofile=$dir/profile.out $dir; done
