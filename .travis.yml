@@ -10,7 +10,9 @@ matrix:
     env: GOVET=true
   - go: 1.7.6
     env: GOVET=true
-  - go: 1.8.3
+  - go: 1.8.5
+    env: GOVET=true
+  - go: 1.9.2
     env: GOVET=true
 
 install:
