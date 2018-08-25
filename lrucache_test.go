@@ -22,8 +22,7 @@ var entries = []struct {
 }
 
 func TestInterface(t *testing.T) {
-	var h httpcache.Cache
-	h = New(1000000, 0)
+	var h httpcache.Cache = New(1000000, 0)
 	if assert.NotNil(t, h) {
 		_, ok := h.Get("missing")
 		assert.False(t, ok)
@@ -44,7 +43,7 @@ func TestCache(t *testing.T) {
 	for _, e := range entries {
 		value, ok := c.Get(e.key)
 		if assert.True(t, ok) {
-			assert.Equal(t, string(e.value), string(value))
+			assert.Equal(t, e.value, string(value))
 		}
 	}
 
@@ -149,18 +148,18 @@ func TestOverhead(t *testing.T) {
 		t.SkipNow()
 	}
 
-	num := 1000000
-	c := New(int64(num)*1000, 0)
+	num := int64(1000000)
+	c := New(num*1000, 0)
 
 	mem := readMem()
 
-	for n := 0; n < num; n++ {
+	for n := 0; int64(n) < num; n++ {
 		c.Set(strconv.Itoa(n), []byte(randKey(1000000000)))
 	}
 
 	mem = readMem() - mem
-	stored := c.Size() - int64(num)*entryOverhead
-	t.Log("entryOverhead =", (int64(mem)-stored)/int64(num))
+	stored := c.Size() - num*entryOverhead
+	t.Log("entryOverhead =", (mem-stored)/num)
 }
 
 func BenchmarkSet(b *testing.B) {
