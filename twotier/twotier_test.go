@@ -1,15 +1,16 @@
 package twotier
 
 import (
-	"github.com/die-net/lrucache"
+	"testing"
+
 	"github.com/gregjones/httpcache"
 	"github.com/stretchr/testify/assert"
-	"testing"
+
+	"github.com/die-net/lrucache"
 )
 
 func TestInterface(t *testing.T) {
-	var h httpcache.Cache
-	h = twoNew(1000000, 1000000)
+	var h httpcache.Cache = twoNew(1000000, 1000000)
 	if assert.NotNil(t, h) {
 		_, ok := h.Get("missing")
 		assert.Equal(t, ok, false)

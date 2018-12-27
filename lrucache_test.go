@@ -1,13 +1,14 @@
 package lrucache
 
 import (
-	"github.com/gregjones/httpcache"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"runtime"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/gregjones/httpcache"
+	"github.com/stretchr/testify/assert"
 )
 
 var entries = []struct {
