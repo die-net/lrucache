@@ -8,13 +8,15 @@ import (
 	"time"
 )
 
+var maxTime = time.Unix(1<<63-62135596801, 999999999)
+
 // LruCache is a thread-safe, in-memory httpcache.Cache that evicts the
 // least recently used entries from memory when either MaxSize (in bytes)
-// limit would be exceeded or (if set) the entries are older than MaxAge (in
-// seconds).  Use the New constructor to create one.
+// limit would be exceeded or (if set) the entries are older than MaxAge (a
+// time.Duration).  Use the New constructor to create one.
 type LruCache struct {
 	MaxSize int64
-	MaxAge  int64
+	MaxAge  time.Duration
 
 	mu    sync.Mutex
 	cache map[string]*list.Element
@@ -23,9 +25,8 @@ type LruCache struct {
 }
 
 // New creates an LruCache that will restrict itself to maxSize bytes of
-// memory.  If maxAge > 0, entries will also be expired after maxAge
-// seconds.
-func New(maxSize, maxAge int64) *LruCache {
+// memory.  If maxAge > 0, entries will also be expired after maxAge.
+func New(maxSize int64, maxAge time.Duration) *LruCache {
 	c := &LruCache{
 		MaxSize: maxSize,
 		MaxAge:  maxAge,
@@ -47,7 +48,7 @@ func (c *LruCache) Get(key string) ([]byte, bool) {
 		return nil, false
 	}
 
-	if c.MaxAge > 0 && le.Value.(*entry).expires <= time.Now().Unix() {
+	if c.MaxAge > 0 && le.Value.(*entry).expires.Before(time.Now()) {
 		c.deleteElement(le)
 		c.maybeDeleteOldest()
 
@@ -66,9 +67,9 @@ func (c *LruCache) Get(key string) ([]byte, bool) {
 func (c *LruCache) Set(key string, value []byte) {
 	c.mu.Lock()
 
-	expires := int64(0)
+	expires := maxTime
 	if c.MaxAge > 0 {
-		expires = time.Now().Unix() + c.MaxAge
+		expires = time.Now().Add(c.MaxAge)
 	}
 
 	if le, ok := c.cache[key]; ok {
@@ -118,8 +119,8 @@ func (c *LruCache) maybeDeleteOldest() {
 	}
 
 	if c.MaxAge > 0 {
-		now := time.Now().Unix()
-		for le := c.lru.Front(); le != nil && le.Value.(*entry).expires <= now; le = c.lru.Front() {
+		now := time.Now()
+		for le := c.lru.Front(); le != nil && le.Value.(*entry).expires.Before(now); le = c.lru.Front() {
 			c.deleteElement(le)
 		}
 	}
@@ -138,7 +139,7 @@ const entryOverhead = 168
 type entry struct {
 	key     string
 	value   []byte
-	expires int64
+	expires time.Time
 }
 
 func (e *entry) size() int64 {

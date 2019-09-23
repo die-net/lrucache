@@ -86,10 +86,10 @@ func TestMaxSize(t *testing.T) {
 }
 
 func TestMaxAge(t *testing.T) {
-	c := New(1000000, 86400)
+	c := New(1000000, 24*time.Hour)
 
-	now := time.Now().Unix()
-	expected := now + 86400
+	now := time.Now()
+	expected := now.Add(24 * time.Hour)
 
 	// Add one expired entry
 	c.Set("foo", []byte("bar"))
@@ -99,7 +99,7 @@ func TestMaxAge(t *testing.T) {
 	for _, s := range entries {
 		c.Set(s.key, []byte(s.value))
 		e := c.lru.Back().Value.(*entry)
-		assert.True(t, e.expires >= expected && e.expires <= expected+10)
+		assert.True(t, e.expires.After(expected) && e.expires.Before(expected.Add(10*time.Second)))
 	}
 
 	// Make sure we can get them all
