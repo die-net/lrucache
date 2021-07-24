@@ -1,4 +1,4 @@
-LruCache [![Build Status](https://travis-ci.org/die-net/lrucache.svg?branch=master)](https://travis-ci.org/die-net/lrucache) [![Coverage Status](https://coveralls.io/repos/github/die-net/lrucache/badge.svg?branch=master)](https://coveralls.io/github/die-net/lrucache?branch=master)
+LruCache [![Build Status](https://github.com/die-net/lrucache/actions/workflows/go-test.yml/badge.svg)](https://github.com/die-net/lrucache/actions/workflows/go-test.yml) [![Coverage Status](https://coveralls.io/repos/github/die-net/lrucache/badge.svg?branch=master)](https://coveralls.io/github/die-net/lrucache?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/die-net/lrucache)](https://goreportcard.com/report/github.com/die-net/lrucache)
 ========
 
 LruCache is a thread-safe, in-memory [httpcache.Cache](https://github.com/gregjones/httpcache) implementation that evicts the least recently used entries when a byte size limit or optional max age would be exceeded.
