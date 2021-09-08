@@ -1,4 +1,4 @@
-TwoTier [![Build Status](https://travis-ci.org/die-net/lrucache.svg?branch=master)](https://travis-ci.org/die-net/lrucache)
+TwoTier [![Build Status](https://github.com/die-net/lrucache/actions/workflows/go-test.yml/badge.svg)](https://github.com/die-net/lrucache/actions/workflows/go-test.yml)
 ========
 
 TwoTier is an [httpcache.Cache](https://github.com/gregjones/httpcache) implementation that wraps two other httpcache.Cache instances,
